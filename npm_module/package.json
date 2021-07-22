@@ -1,0 +1,9 @@
+{
+    "main": "index.js",
+    "name": "datahub-querier",
+    "version": "0.1.1",
+    "homepage": "https://github.com/AntonioGiulio/datahub_search_engine",
+    "dependencies": {
+        "xmlhttprequest": "^1.8.0"
+    }
+}
