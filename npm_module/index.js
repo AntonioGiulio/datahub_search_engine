@@ -74,6 +74,39 @@ class DH_Querier {
         return filteredResults;
     }
 
+    sortResultBySize(results){
+        console.log('Size ranking');       
+
+        results.sort(function(a,b){ 
+            var triples_a = 0;
+            var triples_b = 0;
+            for (var data in a.extras){
+                if(a.extras[data].key === 'triples')
+                    triples_a = a.extras[data].value; 
+            }
+            for (var data in b.extras){
+                if(b.extras[data].key === 'triples')
+                    triples_b = b.extras[data].value;
+            }
+            return triples_b - triples_a});
+
+        return results;
+    }
+
+    sortResultByName(results){
+        console.log('Alphabetic ranking');
+
+        results.sort(function(a, b){
+            var x = a.name.toLowerCase();
+            var y = b.name.toLowerCase();
+            if(x < y) {return -1;}
+            if(x > y) {return 1;}
+            return 0;
+        });
+
+        return results;
+    }
+
     //rendiamo il processo di creazione del file JSON gigante una funzione 
     updateDatasets(){
         var request = new http_tool();
@@ -101,7 +134,7 @@ class DH_Querier {
 }
 
 const querier = new DH_Querier();
-
+/*
 // testiamo i vari metodi implementati
 fs.writeFile('brutalSearchRes.json', JSON.stringify(querier.brutalSearch('amsterdam')), function(err) {
     if (err) return console.log(err);
@@ -111,4 +144,17 @@ fs.writeFile('brutalSearchRes.json', JSON.stringify(querier.brutalSearch('amster
 fs.writeFile('tagSearchRes.json', JSON.stringify(querier.filterResults(querier.tagSearch('culturalheritage', 'tags'), 'id', 'title', 'name')), function(err) {
     if (err) return console.log(err);
     console.log('File written');
+});*/
+
+/*
+fs.writeFile('sizeSortingTest.json', JSON.stringify(querier.filterResults(querier.sortResultBySize(querier.brutalSearch('amsterdam')), 'id', 'title', 'name', 'extras')), function(err) {
+    if (err) return console.log(err);
+    console.log('File written');
+});*/
+
+fs.writeFile('nameSortingTest.json', JSON.stringify(querier.filterResults(querier.sortResultByName(querier.brutalSearch('amsterdam')), 'name')), function(err) {
+    if (err) return console.log(err);
+    console.log('File written');
 });
+
+//console.log(JSON.stringify(querier.sortResultBySize(querier.brutalSearch('amsterdam'))));
