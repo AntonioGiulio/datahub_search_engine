@@ -1,5 +1,11 @@
 const http_tool = require ('xmlhttprequest').XMLHttpRequest;
 const fs = require('fs');
+
+const graphBuilder = require('ngraph.graph');
+const pagerank = require('ngraph.pagerank');
+const centrality = require('ngraph.centrality');
+
+
 var datasets = require("./datahub.json");
 
 
@@ -107,6 +113,28 @@ class DH_Querier {
         return results;
     }
 
+    sortResultByAuthority(results){
+        console.log('Authority ranking');
+        var resultGraph = createGraph(results);
+        var rank = pagerank(resultGraph);
+        console.log(rank);
+
+        results.sort(function(a, b) { return rank[b.name] - rank[a.name]});
+
+        return results;
+    }
+
+    sortResultByCentrality(results){
+        console.log('Centrality ranking');
+        var resultGraph = createGraph(results);
+        var rank = centrality.degree(resultGraph);
+        console.log(rank);
+
+        results.sort(function(a, b) {return rank[b.name] - rank[a.name]});
+
+        return results;
+    }
+
     //rendiamo il processo di creazione del file JSON gigante una funzione 
     updateDatasets(){
         var request = new http_tool();
@@ -133,7 +161,39 @@ class DH_Querier {
     }
 }
 
+function createGraph(raw){
+    var graph = graphBuilder();
+
+    for(d in raw){
+        graph.addNode(raw[d].name);
+    }
+
+    //looking for links
+    for(d in raw){
+        var currKGLinks = raw[d].extras;
+        for(link in currKGLinks){
+            if(currKGLinks[link].key.includes('links')){
+                var currLink = currKGLinks[link].key.split(':')[1];
+                if(graph.getNode(currLink) != null){
+                    graph.addLink(raw[d].name, currLink);
+                }
+            }
+        }
+    }
+
+    return graph;
+}
+
 const querier = new DH_Querier();
+
+
+
+fs.writeFile('centralitySortingTest.json', JSON.stringify(querier.filterResults(querier.sortResultByCentrality(querier.brutalSearch('museum')), 'name')), function(err) {
+    if (err) return console.log(err);
+    console.log('File written');
+});
+
+
 /*
 // testiamo i vari metodi implementati
 fs.writeFile('brutalSearchRes.json', JSON.stringify(querier.brutalSearch('amsterdam')), function(err) {
@@ -152,9 +212,10 @@ fs.writeFile('sizeSortingTest.json', JSON.stringify(querier.filterResults(querie
     console.log('File written');
 });*/
 
+/*
 fs.writeFile('nameSortingTest.json', JSON.stringify(querier.filterResults(querier.sortResultByName(querier.brutalSearch('amsterdam')), 'name')), function(err) {
     if (err) return console.log(err);
     console.log('File written');
-});
+});*/
 
 //console.log(JSON.stringify(querier.sortResultBySize(querier.brutalSearch('amsterdam'))));
