@@ -29,7 +29,7 @@ class DH_Querier {
                 results[i++] = datasets[d];
         }
 
-        return results;
+        return this.generalSorting(results, arguments[1]);
     }
 
     tagSearch(target, tag){
@@ -37,13 +37,14 @@ class DH_Querier {
         var i = 0;
         var field;
         const pattern = new RegExp(target, 'i');
+        console.log(pattern);
         for(let d in datasets){
             field = JSON.stringify(datasets[d][tag]);
             if(pattern.test(field))
-            results[i++] = datasets[d];
+                results[i++] = datasets[d];
         }
 
-        return results;
+        return this.generalSorting(results, arguments[2]);
     }
 
     multiTagSearch(target, ...tags){
@@ -62,13 +63,13 @@ class DH_Querier {
             }
         }
 
-        return results;
+        return this.generalSorting(results, arguments[arguments.length-1]);
     }
 
     filterResults(results, ...tags){
         var filteredResults = JSON.parse('[]');
         var j, z = 0;
-        console.log(tags);
+        console.log('Output tags: ', tags);
         for(let d in results){
             var singleInstance = JSON.parse('{}');
             for(j in tags){
@@ -78,6 +79,29 @@ class DH_Querier {
         }
 
         return filteredResults;
+    }
+
+    generalSorting(results, mode){
+        switch(mode){
+            case 'size':
+                return this.sortResultBySize(results);
+                break;
+
+            case 'name':
+                return this.sortResultByName(results);
+                break;
+
+            case 'authority':
+                return this.sortResultByAuthority(results);
+                break;
+
+            case 'centrality':
+                return this.sortResultByCentrality(results);
+                break;
+
+            default:
+                return this.sortResultByName(results);
+        }
     }
 
     sortResultBySize(results){
@@ -186,12 +210,16 @@ function createGraph(raw){
 
 const querier = new DH_Querier();
 
+querier.filterResults(querier.brutalSearch('museum'), 'name');
+querier.filterResults(querier.tagSearch('library', 'name'), 'id', 'name', 'title');
+querier.filterResults(querier.multiTagSearch('health', 'name', 'notes', 'title'), 'title', 'name');
 
 
+/*
 fs.writeFile('centralitySortingTest.json', JSON.stringify(querier.filterResults(querier.sortResultByCentrality(querier.brutalSearch('museum')), 'name')), function(err) {
     if (err) return console.log(err);
     console.log('File written');
-});
+});*/
 
 
 /*
