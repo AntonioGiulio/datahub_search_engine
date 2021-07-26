@@ -7,9 +7,7 @@ var datasets = require("./datahub.json");
 class DH_Querier {
 
     constructor() {
-       //il file in locale viene richiesto con una require all'avvio, quindi viene caricato e 
-       // parsato in json in automatico
-        //console.log(datasets);       
+         //se il file è vuoto (o obsoleto) dobbiamo aggiornarlo
         
     }
 
@@ -36,7 +34,7 @@ class DH_Querier {
         for(let d in datasets){
             field = JSON.stringify(datasets[d][tag]);
             if(pattern.test(field))
-            results[i++] = this.data[d];
+            results[i++] = datasets[d];
         }
 
         return results;
@@ -64,10 +62,11 @@ class DH_Querier {
     filterResults(results, ...tags){
         var filteredResults = JSON.parse('[]');
         var j, z = 0;
+        console.log(tags);
         for(let d in results){
-            var singleInstance = JSON.parse('[]');
+            var singleInstance = JSON.parse('{}');
             for(j in tags){
-                singleInstance[tags[j]] = result[d][tags[j]];
+                singleInstance[tags[j]] = results[d][tags[j]];
             }
             filteredResults[z++] = singleInstance;
         }
@@ -103,7 +102,13 @@ class DH_Querier {
 
 const querier = new DH_Querier();
 
-fs.writeFile('brutalSearchRes.json', JSON.stringify(querier.brutalSearch('library')), function(err) {
+// testiamo i vari metodi implementati
+fs.writeFile('brutalSearchRes.json', JSON.stringify(querier.brutalSearch('amsterdam')), function(err) {
+    if (err) return console.log(err);
+    console.log('File written');
+});
+
+fs.writeFile('tagSearchRes.json', JSON.stringify(querier.filterResults(querier.tagSearch('culturalheritage', 'tags'), 'id', 'title', 'name')), function(err) {
     if (err) return console.log(err);
     console.log('File written');
 });
