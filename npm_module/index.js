@@ -25,15 +25,20 @@ const pagerank = require('ngraph.pagerank');
 const centrality = require('ngraph.centrality');
 
 // Upload of the file containing all the KGs if present
-var datasets = require("./datahub.json");
+var datasets;
 
 
 
 class DH_Querier {
 
+    // if datahub.json is missing this function downloads it.
     constructor() {
-         //se il file è vuoto (o obsoleto) dobbiamo aggiornarlo
-        
+        try {
+            datasets = require("./datahub.json");
+        } catch (error) {
+            console.log('Datahub.json is missing. Download....');
+            this.updateDatasets();         
+        }        
     }
 
 
@@ -44,6 +49,7 @@ class DH_Querier {
     * Return: JSONArray containing the ordered results.
     */
     brutalSearch(target){
+        console.log('brutalSearch');
         var results = JSON.parse('[]');
         var i = 0;
         var field;
@@ -65,6 +71,7 @@ class DH_Querier {
     * Return: JSONArray containing the ordered results.
     */
     tagSearch(target, tag){
+        console.log('tagSearch')
         var results = JSON.parse('[]');
         var i = 0;
         var field;
@@ -86,6 +93,7 @@ class DH_Querier {
     * Return: JSONArray containing the ordered results.
     */
     multiTagSearch(target, ...tags){
+        console.log('multiTagSearch');
         var results = JSON.parse('[]');
         var i = 0, j;
         var field;
@@ -204,7 +212,7 @@ class DH_Querier {
         console.log('Authority ranking');
         var resultGraph = createGraph(results);
         var rank = pagerank(resultGraph);
-        console.log(rank);
+        //console.log(rank);
 
         results.sort(function(a, b) { return rank[b.name] - rank[a.name]});
 
@@ -220,7 +228,7 @@ class DH_Querier {
         console.log('Centrality ranking');
         var resultGraph = createGraph(results);
         var rank = centrality.degree(resultGraph);
-        console.log(rank);
+        //console.log(rank);
 
         results.sort(function(a, b) {return rank[b.name] - rank[a.name]});
 
@@ -238,9 +246,9 @@ class DH_Querier {
 
             if(request.status === 200){
                 console.log("request n':" + i + " response: " + request.status);
-                var currentDS = JSON.parse(request.responseText)['result']['result'];
+                var currentDS = JSON.parse(request.responseText)['result']['results'];
                 var j = 0;
-                for(let data in currentDs){
+                for(let data in currentDS){
                     this.datasets[(j++)+start] = currentDS[data];
                 }
             }
@@ -249,6 +257,7 @@ class DH_Querier {
         fs.writeFile('datahub.json', JSON.stringify(this.datasets), function(err) {
             if (err) return console.log(err);
             console.log('File updated');
+            datasets = require("./datahub.json");
         });
     }
 }
@@ -282,42 +291,4 @@ function createGraph(raw){
     return graph;
 }
 
-const querier = new DH_Querier();
-
-querier.filterResults(querier.brutalSearch('museum'), 'name');
-querier.filterResults(querier.tagSearch('library', 'name'), 'id', 'name', 'title');
-querier.filterResults(querier.multiTagSearch('health', 'name', 'notes', 'title'), 'title', 'name');
-
-
-/*
-fs.writeFile('centralitySortingTest.json', JSON.stringify(querier.filterResults(querier.sortResultByCentrality(querier.brutalSearch('museum')), 'name')), function(err) {
-    if (err) return console.log(err);
-    console.log('File written');
-});*/
-
-
-
-// testiamo i vari metodi implementati
-fs.writeFile('brutalSearchRes.json', JSON.stringify(querier.filterResults(querier.tagSearch('ontology', 'tags', 'size'), 'name', 'notes')), function(err) {
-    if (err) return console.log(err);
-    console.log('File written');
-});
-/*
-fs.writeFile('tagSearchRes.json', JSON.stringify(querier.filterResults(querier.tagSearch('culturalheritage', 'tags'), 'id', 'title', 'name')), function(err) {
-    if (err) return console.log(err);
-    console.log('File written');
-});*/
-
-/*
-fs.writeFile('sizeSortingTest.json', JSON.stringify(querier.filterResults(querier.sortResultBySize(querier.brutalSearch('amsterdam')), 'id', 'title', 'name', 'extras')), function(err) {
-    if (err) return console.log(err);
-    console.log('File written');
-});*/
-
-/*
-fs.writeFile('nameSortingTest.json', JSON.stringify(querier.filterResults(querier.sortResultByName(querier.brutalSearch('amsterdam')), 'name')), function(err) {
-    if (err) return console.log(err);
-    console.log('File written');
-});*/
-
-//console.log(JSON.stringify(querier.sortResultBySize(querier.brutalSearch('amsterdam'))));
+module.exports = DH_Querier;
