@@ -1,11 +1,30 @@
+/*
+– – – – – – – – – – – – – – – – – – – – – – – – – – – – – 
+Title :  DataHub Querier
+Author : Antonio Giulio
+URL : https://github.com/AntonioGiulio/datahub_search_engine
+Description : This module is able to perform various types of queries on the JSON file 
+            created using the CKAN (API) linked to the site.
+            It turns out to be useful for those looking for a Knowledge Graph to use 
+            or for those who want to create analytics on datahub.
+Created : August 23 2021
+version : 0.1.0
+– – – – – – – – – – – – – – – – – – – – – – – – – – – – – 
+*/
+
+// npm module required for http request/response
 const http_tool = require ('xmlhttprequest').XMLHttpRequest;
+
 const fs = require('fs');
 
+// npm module required to create graphs
 const graphBuilder = require('ngraph.graph');
+// npm module required to compute pagerank on a graph
 const pagerank = require('ngraph.pagerank');
+// npm module required to compute centrality on a graph
 const centrality = require('ngraph.centrality');
 
-
+// Upload of the file containing all the KGs if present
 var datasets = require("./datahub.json");
 
 
@@ -17,6 +36,13 @@ class DH_Querier {
         
     }
 
+
+    /*
+    * Summary: For each knowledge graph, it searches within all tags 
+                for the regular expression containing the target.
+    * Parameters: target (string) keyword to search, rankingMode (string) enable one of ranking modes.
+    * Return: JSONArray containing the ordered results.
+    */
     brutalSearch(target){
         var results = JSON.parse('[]');
         var i = 0;
@@ -32,6 +58,12 @@ class DH_Querier {
         return this.generalSorting(results, arguments[1]);
     }
 
+    /*
+    * Summary: For each knowledge graph, it searches within the specified tag 
+                for the regular expression containing the target.
+    * Parameters: target (string) keyword to search, tag (string) tag to inspect, rankingMode (string) enable one of ranking modes.
+    * Return: JSONArray containing the ordered results.
+    */
     tagSearch(target, tag){
         var results = JSON.parse('[]');
         var i = 0;
@@ -47,6 +79,12 @@ class DH_Querier {
         return this.generalSorting(results, arguments[2]);
     }
 
+    /*
+    * Summary: For each knowledge graph, it searches within the specified tags 
+                for the regular expression containing the target.
+    * Parameters: target (string) keyword to search, tags (string[]) tags to inspect, rankingMode (string) enable one of ranking modes.
+    * Return: JSONArray containing the ordered results.
+    */
     multiTagSearch(target, ...tags){
         var results = JSON.parse('[]');
         var i = 0, j;
@@ -66,6 +104,11 @@ class DH_Querier {
         return this.generalSorting(results, arguments[arguments.length-1]);
     }
 
+    /*
+    * Summary: It's a filter to return in the resulting JSON only tags specified.
+    * Parameters: results (JSONArray) generated in a previous request, tags (string[]) tag to filter in.
+    * Return: JSONArray containing the filtered results.
+    */
     filterResults(results, ...tags){
         var filteredResults = JSON.parse('[]');
         var j, z = 0;
@@ -81,6 +124,11 @@ class DH_Querier {
         return filteredResults;
     }
 
+    /*
+    * Summary: It's a dispatcher method to execute the ranking algorithm specified in mode parameter.
+    * Parameters: results (JSONArray) generated in a previous request, mode (string) ranking mode.
+    * Return: JSONArray containing the ordered results.
+    */
     generalSorting(results, mode){
         switch(mode){
             case 'size':
@@ -104,6 +152,11 @@ class DH_Querier {
         }
     }
 
+    /*
+    * Summary: Sorts results by triples number.
+    * Parameters: results (JSONArray) generated in a previous request.
+    * Return: JSONArray containing the ordered results.
+    */
     sortResultBySize(results){
         console.log('Size ranking');       
 
@@ -123,6 +176,11 @@ class DH_Querier {
         return results;
     }
 
+    /*
+    * Summary: Sorts results in alphabetic order using the name(= identifier on lodcloud).
+    * Parameters: results (JSONArray) generated in a previous request.
+    * Return: JSONArray containing the ordered results.
+    */
     sortResultByName(results){
         console.log('Alphabetic ranking');
 
@@ -137,6 +195,11 @@ class DH_Querier {
         return results;
     }
 
+    /*
+    * Summary: Sorts results by authority using the pagerank algorithm
+    * Parameters: results (JSONArray) generated in a previous request.
+    * Return: JSONArray containing the ordered results.
+    */
     sortResultByAuthority(results){
         console.log('Authority ranking');
         var resultGraph = createGraph(results);
@@ -148,6 +211,11 @@ class DH_Querier {
         return results;
     }
 
+    /*
+    * Summary: Sorts results by centrality using the centrality algorithm
+    * Parameters: results (JSONArray) generated in a previous request.
+    * Return: JSONArray containing the ordered results.
+    */
     sortResultByCentrality(results){
         console.log('Centrality ranking');
         var resultGraph = createGraph(results);
@@ -159,7 +227,7 @@ class DH_Querier {
         return results;
     }
 
-    //rendiamo il processo di creazione del file JSON gigante una funzione 
+    // we can use this function to update the KGs database
     updateDatasets(){
         var request = new http_tool();
         this.datasets = JSON.parse('[]');
@@ -185,14 +253,20 @@ class DH_Querier {
     }
 }
 
+/*
+* Summary: It's an external function that create a graph from results.
+* Parameters: raw (JSONArray) generated in a previous request.
+* Return: graph.
+*/
 function createGraph(raw){
+    // create an empty graph
     var graph = graphBuilder();
-
+    // let's fill it with the nodes that represent the identifiers of the datasets resulting from the search on the DataHub
     for(d in raw){
         graph.addNode(raw[d].name);
     }
 
-    //looking for links
+    // we look for direct links between the nodes created
     for(d in raw){
         var currKGLinks = raw[d].extras;
         for(link in currKGLinks){
@@ -222,13 +296,13 @@ fs.writeFile('centralitySortingTest.json', JSON.stringify(querier.filterResults(
 });*/
 
 
-/*
+
 // testiamo i vari metodi implementati
-fs.writeFile('brutalSearchRes.json', JSON.stringify(querier.brutalSearch('amsterdam')), function(err) {
+fs.writeFile('brutalSearchRes.json', JSON.stringify(querier.filterResults(querier.tagSearch('ontology', 'tags', 'size'), 'name', 'notes')), function(err) {
     if (err) return console.log(err);
     console.log('File written');
 });
-
+/*
 fs.writeFile('tagSearchRes.json', JSON.stringify(querier.filterResults(querier.tagSearch('culturalheritage', 'tags'), 'id', 'title', 'name')), function(err) {
     if (err) return console.log(err);
     console.log('File written');
