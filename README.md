@@ -1,4 +1,4 @@
-# Lod-Cloud Querier
+# DataHub Querier
 
 ## Description 
 It is a javascript class created to make it easier and more effective to search for knowledge graphs among those made available by [DataHub](https://old.datahub.io).

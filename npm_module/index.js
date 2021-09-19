@@ -38,7 +38,9 @@ class DH_Querier {
         } catch (error) {
             console.log('Datahub.json is missing. Download....');
             this.updateDatasets();         
-        }        
+        }     
+        
+        datasets = this.extractLod(datasets);
     }
 
 
@@ -130,6 +132,38 @@ class DH_Querier {
         }
 
         return filteredResults;
+    }
+
+    /*
+    *   this function is able to filter results to obtain only the effective Knowledge Graphs
+    */
+    extractLod(ds){
+        var cleanedDataset = JSON.parse('[]');
+        var i = 0;
+
+        var flagLod = 0, flagSparql = 0;
+        for(let kg in ds){
+            var currTags = ds[kg]['tags'];
+            var currRes = ds[kg]['resources'];
+            for(let tag in currTags){
+                if(currTags[tag]['name'] === 'lod'){
+                    flagLod = 1;
+                }
+            }
+            for(let res in currRes){
+                if(currRes[res]['format'].includes('sparql')){
+                    flagSparql = 1;
+                }
+            }
+
+            if(flagLod || flagSparql){
+                cleanedDataset[i++] = ds[kg];
+            }
+            
+            flagLod = 0; flagSparql = 0;
+        }
+
+        return cleanedDataset;
     }
 
     /*
