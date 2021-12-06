@@ -25,7 +25,7 @@ Option parameters:
 
 -   keyword: is the only mandatory parameter to perform a brutalSearch query, it accepts any type of string, even a regular expression
 
-Ex: <https://datahub-api.herokuapp.com/brutalSearch?keyword=museum>
+Ex: <https://data-hub-api.herokuapp.com/brutalSearch?keyword=museum>
 
 It performs a brutal search on all tags for each KG in DataHub and returns KGs in JSON format that match the regular expression entered by the user, in this case /museum/i.
 
@@ -41,13 +41,13 @@ There are four possible ranking:
 
 -   centrality →  an adjacency graph is created with the resulting KGs and then Centrality value is calculated for each KG to sort.
 
-Ex: <https://datahub-api.herokuapp.com/brutalSearch?keyword=museum&rankBy=size> 
+Ex: <https://data-hub-api.herokuapp.com/brutalSearch?keyword=museum&rankBy=size> 
 
-or <https://datahub-api.herokuapp.com/brutalSearch?keyword=museum&rankBy=authority>...
+or <https://data-hub-api.herokuapp.com/brutalSearch?keyword=museum&rankBy=authority>...
 
 -   returnOnly: This parameter is used to format the results, you can choose which tags to collect for each resulting KG (always selected from the tag list mentioned below).
 
-Ex: <https://datahub-api.herokuapp.com/keyword=museum&returnOnly=name,title,notes,resources>
+Ex: <https://data-hub-api.herokuapp.com/keyword=museum&returnOnly=name,title,notes,resources>
 
 Multitag Search
 ---------------
@@ -62,6 +62,6 @@ Option parameters:
 
 id, name, title, notes, tags, extras, resources, url, organization, author, author_email, state, type, license_id, url.
 
-Ex: <https://datahub-api.herokuapp.com/multiTagSearch?keyword=museum&tags=title,notes,tags,organization> 
+Ex: <https://data-hub-api.herokuapp.com/multiTagSearch?keyword=museum&tags=title,notes,tags,organization> 
 
 It performs a multiTagSearch only on the specified tags, in this case title, notes, tags and organization.
