@@ -1,62 +1,67 @@
-# DataHub Querier
+DataHub Search Engine
 
-## Description 
-It is a javascript class created to make it easier and more effective to search for knowledge graphs among those made available by [DataHub](https://old.datahub.io).
+Credits: Antonio Giulio, Maria Angela Pellegrino
 
-The site uses a [CKAN (API)](https://docs.ckan.org/en/2.6/api/) through which it was possible to automatically create a JSON file containing all the KGs and Datasets maintained by the site.
+Introduction
+============
 
-Therefore it is possible to analyze and query this file, in particular you can perform a **brutal search** and a **search by tag ang multiple tag**.
+Data management platforms, e. g., [LOD Cloud](https://lod-cloud.net/) and [DataHub](https://old.datahub.io/), simplify lookup for Knowledge Graphs (KGs) of interest, but their access mechanism is not designed to access all these platforms by a standard and unified approach. We propose an API to query DataHub content as a first step in the direction of defining a standard strategy to retrieve keyword-based KG by remote applications.
 
-You can also choose to **rank** the results in 4 different ways:
+We can exploit a CKAN API to retrieve DataHub KGs in JSON format. The JSON contains metadata foreach KG by detailing, among others, title and notes, unique nme, tags and extras, resources and access points, such as the SPARQL endpoint .
 
-* **name** (default)
-* **size**
-* **authority**
-* **centrality**
+The proposed API is a keyword-based lookup REST API  that accesses the DataHub JSON content and retrieves KGs whose metadata contains the user-defined keyword expressed as a regular expression. In addition to this, Users can customize fields considered during the lookup process and the fields that must be returned, results can also be ranked in different ways.
 
+Usage
+=====
 
-## Basic Usage
-**Install** with npm:
-`npm install datahub-querier`
+There are two types of lookup, BrutalSearch and MultiTagSearch.
 
-```javascript
-// First of all you have to require the package in the code
-var dh_querier = require('datahub-querier');
+Brutal Search
+-------------
 
-// ..then you have to initialize the lc_querier
-var querier = new dh_querier();
-```
+It returns the maximum number of results for a given keyword.
 
-Now you are ready to exploit all the functions:
+Option parameters:
 
-```javascript
-BRUTAL SEARCH
+-   keyword: is the only mandatory parameter to perform a brutalSearch query, it accepts any type of string, even a regular expression
 
-var results = querier.brutalSearch('keyword', 'rankingMode'); 
-//rankingMode(optional) is one of['name', 'size', 'authority', 'centrality']
+Ex: <https://datahub-api.herokuapp.com/brutalSearch?keyword=museum>
 
+It performs a brutal search on all tags for each KG in DataHub and returns KGs in JSON format that match the regular expression entered by the user, in this case /museum/i.
 
-TAG SEARCH
+-   rankBy: This parameter is used to choose which ranking method you want to associate with the lookup results.
 
-var results = querier.tagSearch('keyword', 'tag', 'rankingMode'); 
-//choose one of the tags from DataHub json structure.
+There are four possible ranking:
 
+-   name(default) → the results are sorted alphabetically.
 
-MULTITAG SEARCH
+-   size → the results are sorted by the number of triples from largest to smallest.
 
-var results = querier.multiTagSearch('keyword', 'tag_1', 'tag_2', 'tag_3', ...,  rankingMode);
-// you perform the query on several tags.
+-   authority → an adjacency graph is created with the resulting KGs and then the PageRank is calculated to sort results.
 
-```
+-   centrality →  an adjacency graph is created with the resulting KGs and then Centrality value is calculated for each KG to sort.
 
-## Available methods for a datahub-querier instance
+Ex: <https://datahub-api.herokuapp.com/brutalSearch?keyword=museum&rankBy=size> 
 
-* **brutalSearch(target)** : For each dataset in DataHub, it searches within all tags for the regular expression containing the target.
-* **tagSearch(target, tag)**: For each dataset, it searches within the specified tag for the regular expression containing the target.
-* **multiTagSearch(target, ...tags)**: For each dataset, it searches within the specified tags the regular expression containing the target.
-* **filterResults(result, ...tags)**: It's a filter to return in the resulting JSON only tags specified.
-* **generalSorting(result, mode)**: It's a dispatcher method to execute the ranking algorithm specified in mode parameter.
-* **sortResultsBySize(results)**: Sorts results by triples number.
-* **sortResultsByName(results)**: Sorts results in alphabetic order using the name.
-* **sortResultsByAuthority(results)**: Sorts results by authority using the pagerank algorithm.
-* **sortResultsByCentrality(results)**: Sorts results by centrality using the centrality algorithm.
+or <https://datahub-api.herokuapp.com/brutalSearch?keyword=museum&rankBy=authority>...
+
+-   returnOnly: This parameter is used to format the results, you can choose which tags to collect for each resulting KG (always selected from the tag list mentioned below).
+
+Ex: <https://datahub-api.herokuapp.com/keyword=museum&returnOnly=name,title,notes,resources>
+
+Multitag Search
+---------------
+
+It focuses the lookup only on tags specified by the user. 
+
+Option parameters:
+
+-   keyword, rankBy, returnOnly: like before..
+
+-   tags: It accepts single or multiple tags chosen from:
+
+id, name, title, notes, tags, extras, resources, url, organization, author, author_email, state, type, license_id, url.
+
+Ex: <https://datahub-api.herokuapp.com/multiTagSearch?keyword=museum&tags=title,notes,tags,organization> 
+
+It performs a multiTagSearch only on the specified tags, in this case title, notes, tags and organization.

@@ -1,0 +1,25 @@
+{
+  "name": "datahub-api",
+  "version": "0.1.0",
+  "description": "A simple api that query DataHub",
+  "engines": {
+    "node": "14.x"
+  },
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "datahub-querier": "^0.1.3",
+    "express": "^4.17.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AntonioGiulio/datahub_search_engine"
+  },
+  "keywords": [
+    "knowledge graph",
+    "datahub",
+    "query"
+  ]
+}
